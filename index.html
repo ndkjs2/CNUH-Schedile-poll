@@ -426,6 +426,7 @@ function renderTags() {
 }
 
 function renderGrid() {
+  const n     = persons.length;
   const grid   = document.getElementById('day-grid');
   const counts = DAYS.map(d => persons.filter(p => checks[`${d.key}__${p}`]).length);
   const max    = Math.max(...counts, 0);
