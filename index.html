@@ -327,9 +327,13 @@ import { getDatabase, ref, onValue, set, get }
 
 // ── Firebase 설정 ──────────────────────────────────────────────
 const app = initializeApp({
-  apiKey:    "AIzaSyBGrSZjUiuOJL6dQH__PdD8_sYBkrYA-gA",
-  databaseURL: "https://cnhu-schedule-poll-default-rtdb.asia-southeast1.firebasedatabase.app",
-  projectId: "cnhu-schedule-poll",
+  apiKey:            "AIzaSyBGrSZjUiuOJL6dQH__PdD8_sYBkrYA-gA",
+  authDomain:        "cnhu-schedule-poll.firebaseapp.com",
+  databaseURL:       "https://cnhu-schedule-poll-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId:         "cnhu-schedule-poll",
+  storageBucket:     "cnhu-schedule-poll.firebasestorage.app",
+  messagingSenderId: "242734240479",
+  appId:             "1:242734240479:web:d5aa3c0b6e13e737f84f6a",
 });
 const db = getDatabase(app);
 const ROOT = ref(db, "schedule_poll");
