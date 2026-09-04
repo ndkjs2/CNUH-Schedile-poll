@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>행사 일정 조율 — CNHU</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --navy:    #1E3A5F;
+    --navy-d:  #163054;
+    --navy-l:  #2E5280;
+    --blue:    #3498DB;
+    --blue-l:  #EBF5FB;
+    --green:   #1A6B3C;
+    --green-l: #E8F5EE;
+    --green-b: #27AE60;
+    --red:     #C0392B;
+    --red-l:   #FDECEA;
+    --gray-0:  #FFFFFF;
+    --gray-1:  #F7F9FC;
+    --gray-2:  #EEF2F7;
+    --gray-3:  #D6E4F0;
+    --gray-4:  #8B9BB0;
+    --gray-5:  #4A5568;
+    --gray-6:  #1A202C;
+    --shadow:  0 2px 16px rgba(30,58,95,0.09);
+    --radius:  12px;
+  }
+
+  body {
+    font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', -apple-system, sans-serif;
+    background: var(--gray-1);
+    color: var(--gray-6);
+    min-height: 100vh;
+  }
+
+  /* ── 헤더 ── */
+  header {
+    background: linear-gradient(135deg, var(--navy-d) 0%, var(--navy-l) 100%);
+    padding: 32px 24px 28px;
+    text-align: center;
+  }
+  header .eyebrow {
+    font-size: 11px;
+    letter-spacing: 1.5px;
+    color: #7FA8CC;
+    margin-bottom: 10px;
+    text-transform: uppercase;
+  }
+  header h1 { font-size: 24px; font-weight: 700; color: #fff; margin-bottom: 8px; }
+  header .sub { font-size: 14px; color: #9ECAE1; margin-bottom: 22px; }
+
+  .progress-wrap {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    background: rgba(255,255,255,0.1);
+    border-radius: 99px;
+    padding: 8px 20px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  .prog-text { font-size: 13px; color: #BCD9ED; }
+  .prog-num  { font-size: 20px; font-weight: 700; color: #fff; }
+  .prog-num span { color: var(--green-b); }
+  .prog-bar-outer {
+    width: 100px; height: 6px;
+    background: rgba(255,255,255,0.2);
+    border-radius: 99px; overflow: hidden;
+  }
+  .prog-bar-inner {
+    height: 100%; background: var(--green-b);
+    border-radius: 99px;
+    transition: width 0.4s ease;
+    width: 0%;
+  }
+
+  /* ── 실시간 상태바 ── */
+  .sync-bar {
+    display: flex; align-items: center; justify-content: space-between;
+    background: var(--green-l);
+    border-bottom: 1px solid #A8D5BC;
+    padding: 8px 20px;
+    font-size: 12px;
+    flex-wrap: wrap; gap: 6px;
+  }
+  .sync-left  { display: flex; align-items: center; gap: 7px; color: var(--green); font-weight: 500; }
+  .sync-dot   { width: 7px; height: 7px; border-radius: 50%; background: var(--green-b); animation: pulse 2s infinite; }
+  .sync-right { color: var(--green); opacity: 0.75; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.35} }
+
+  /* ── 본문 ── */
+  main { max-width: 740px; margin: 0 auto; padding: 24px 16px 60px; }
+
+  /* ── 등록 카드 ── */
+  .card {
+    background: var(--gray-0);
+    border: 1px solid var(--gray-3);
+    border-radius: var(--radius);
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: var(--shadow);
+  }
+  .card-title {
+    font-size: 14px; font-weight: 600;
+    color: var(--navy); margin-bottom: 14px;
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .form-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  .form-row input {
+    flex: 1; min-width: 180px; height: 40px;
+    border: 1px solid var(--gray-3); border-radius: 8px;
+    padding: 0 12px; font-size: 14px; color: var(--gray-6);
+    background: var(--gray-1); outline: none;
+    transition: border-color 0.15s, background 0.15s;
+  }
+  .form-row input:focus { border-color: var(--blue); background: #fff; }
+  .btn {
+    height: 40px; padding: 0 20px; border-radius: 8px;
+    border: none; background: var(--navy); color: #fff;
+    font-size: 14px; font-weight: 600; cursor: pointer;
+    transition: background 0.15s, transform 0.1s;
+    white-space: nowrap;
+  }
+  .btn:hover  { background: var(--navy-l); }
+  .btn:active { transform: scale(0.97); }
+  .err { font-size: 12px; color: var(--red); margin-top: 8px; min-height: 16px; }
+
+  /* 참석자 태그 */
+  .tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 14px; }
+  .tag {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 4px 10px; border-radius: 99px;
+    background: var(--blue-l); color: var(--navy);
+    font-size: 12px; font-weight: 600;
+    border: 1px solid var(--gray-3);
+  }
+  .tag button {
+    background: none; border: none; cursor: pointer;
+    color: var(--gray-4); font-size: 14px; line-height: 1;
+    padding: 0; display: flex; align-items: center;
+    transition: color 0.1s;
+  }
+  .tag button:hover { color: var(--red); }
+
+  /* ── 날짜 그리드 ── */
+  .section-lbl {
+    font-size: 12px; font-weight: 600; color: var(--gray-4);
+    letter-spacing: 0.4px; margin-bottom: 10px; margin-top: 4px;
+  }
+  .day-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(195px, 1fr));
+    gap: 12px; margin-bottom: 20px;
+  }
+
+  .day-card {
+    background: var(--gray-0);
+    border: 1px solid var(--gray-3);
+    border-radius: var(--radius);
+    overflow: hidden; box-shadow: var(--shadow);
+    transition: border-color 0.2s;
+  }
+  .day-card.best { border-color: var(--green); border-width: 1.5px; }
+
+  .day-head {
+    padding: 13px 14px 11px;
+    background: var(--gray-1);
+    border-bottom: 1px solid var(--gray-2);
+  }
+  .day-head-top { display: flex; justify-content: space-between; align-items: flex-start; }
+  .day-date { font-size: 15px; font-weight: 700; color: var(--navy); }
+  .day-dow  { font-size: 11px; color: var(--gray-4); margin-top: 2px; }
+  .best-tag {
+    font-size: 10px; font-weight: 700;
+    padding: 2px 8px; border-radius: 99px;
+    background: var(--green-l); color: var(--green);
+    border: 1px solid #A8D5BC;
+  }
+  .time-pill {
+    display: inline-flex; align-items: center; gap: 4px;
+    margin-top: 8px; padding: 3px 10px;
+    border-radius: 99px; background: #EBF2FA;
+    color: var(--navy); font-size: 11px; font-weight: 600;
+    border: 1px solid var(--gray-3);
+  }
+
+  .day-body { padding: 12px 14px; }
+  .count-row {
+    display: flex; align-items: baseline; gap: 5px;
+    margin-bottom: 10px;
+  }
+  .count-n   { font-size: 28px; font-weight: 700; color: var(--navy); line-height: 1; }
+  .count-of  { font-size: 13px; color: var(--gray-4); }
+
+  .divider { height: 1px; background: var(--gray-2); margin-bottom: 8px; }
+
+  .check-item {
+    display: flex; align-items: center; gap: 8px;
+    padding: 5px 0; cursor: pointer;
+  }
+  .check-item input[type=checkbox] {
+    width: 15px; height: 15px;
+    accent-color: var(--navy);
+    cursor: pointer; flex-shrink: 0;
+  }
+  .check-item label {
+    font-size: 13px; color: var(--gray-5);
+    cursor: pointer; user-select: none;
+    transition: color 0.1s, font-weight 0.1s;
+  }
+  .check-item.on label { color: var(--navy); font-weight: 600; }
+  .no-person { font-size: 12px; color: var(--gray-4); padding: 4px 0; }
+
+  .chips { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 10px; }
+  .chip {
+    display: inline-flex; align-items: center; gap: 3px;
+    padding: 3px 9px; border-radius: 99px;
+    background: var(--green-l); color: var(--green);
+    font-size: 11px; font-weight: 600;
+    border: 1px solid #A8D5BC;
+  }
+
+  /* ── 요약 ── */
+  .sum-title { font-size: 14px; font-weight: 600; color: var(--navy); margin-bottom: 12px; }
+  .sum-row {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 8px 0; border-bottom: 1px solid var(--gray-2); font-size: 13px;
+  }
+  .sum-row:last-child { border-bottom: none; }
+  .sum-lbl  { color: var(--gray-5); }
+  .sum-right { display: flex; align-items: center; gap: 8px; }
+  .sum-best {
+    font-size: 10px; font-weight: 700; padding: 2px 7px;
+    border-radius: 99px; background: var(--green-l);
+    color: var(--green); border: 1px solid #A8D5BC;
+  }
+  .sum-val  { color: var(--gray-6); font-weight: 600; }
+  .sum-none { color: var(--gray-4); }
+
+  /* ── 로딩 오버레이 ── */
+  #loading {
+    position: fixed; inset: 0;
+    background: rgba(30,58,95,0.55);
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    gap: 14px; z-index: 999;
+  }
+  .spinner {
+    width: 36px; height: 36px;
+    border: 3px solid rgba(255,255,255,0.3);
+    border-top-color: #fff;
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  #loading p { color: #fff; font-size: 14px; }
+
+  @media (max-width: 480px) {
+    header h1 { font-size: 20px; }
+    .day-grid  { grid-template-columns: 1fr; }
+    .progress-wrap { gap: 8px; }
+  }
+</style>
+</head>
+<body>
+
+<div id="loading">
+  <div class="spinner"></div>
+  <p>데이터 불러오는 중...</p>
+</div>
+
+<header>
+  <div class="eyebrow">CNHU · 행사 일정 조율</div>
+  <h1>📅 참석 가능 날짜를 선택해 주세요</h1>
+  <p class="sub">저녁 19:00 공통 · 9월 28일 / 29일</p>
+  <div class="progress-wrap">
+    <span class="prog-text">등록 완료</span>
+    <span class="prog-num"><span id="reg-count">0</span> / 11명</span>
+    <div class="prog-bar-outer">
+      <div class="prog-bar-inner" id="prog-bar"></div>
+    </div>
+  </div>
+</header>
+
+<div class="sync-bar">
+  <div class="sync-left">
+    <span class="sync-dot"></span>
+    실시간 동기화 중 — 누구나 이 링크에서 같은 현황을 볼 수 있습니다
+  </div>
+  <span class="sync-right" id="sync-time">연결 중...</span>
+</div>
+
+<main>
+  <!-- 등록 카드 -->
+  <div class="card">
+    <div class="card-title">
+      참석자 등록
+      <span id="prog-pill" style="font-size:12px;font-weight:500;padding:2px 10px;border-radius:99px;background:var(--blue-l);color:var(--navy)">0 / 11명</span>
+    </div>
+    <div class="form-row">
+      <input id="inp-name" type="text" placeholder="이름을 입력하세요" maxlength="20">
+      <button class="btn" onclick="addPerson()">등록</button>
+    </div>
+    <div class="err" id="err-msg"></div>
+    <div class="tags" id="reg-tags"></div>
+  </div>
+
+  <!-- 날짜 그리드 -->
+  <div class="section-lbl">날짜별 참석 여부 (저녁 19:00)</div>
+  <div class="day-grid" id="day-grid"></div>
+
+  <!-- 요약 -->
+  <div class="card" id="summary" style="display:none">
+    <div class="sum-title">참석 현황 요약</div>
+    <div id="sum-body"></div>
+  </div>
+</main>
+
+<!-- Firebase SDK -->
+<script type="module">
+import { initializeApp }           from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getDatabase, ref, onValue, set, get }
+  from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+
+// ── Firebase 설정 ──────────────────────────────────────────────
+const app = initializeApp({
+  apiKey:    "AIzaSyBGrSZjUiuOJL6dQH__PdD8_sYBkrYA-gA",
+  databaseURL: "https://cnhu-schedule-poll-default-rtdb.firebaseio.com",
+  projectId: "cnhu-schedule-poll",
+});
+const db = getDatabase(app);
+const ROOT = ref(db, "schedule_poll");
+
+// ── 상수 ───────────────────────────────────────────────────────
+const DAYS = [
+  { label:"9월 28일", dow:"월요일", key:"d928" },
+  { label:"9월 29일", dow:"화요일", key:"d929" },
+];
+const TOTAL = 11;
+
+let persons = [];
+let checks  = {};
+let saving  = false;
+
+// ── Firebase 저장 ──────────────────────────────────────────────
+async function saveToFirebase() {
+  if (saving) return;
+  saving = true;
+  try {
+    await set(ROOT, { persons, checks });
+    updateSync();
+  } catch(e) { console.error(e); }
+  saving = false;
+}
+
+// ── 실시간 리스너 ──────────────────────────────────────────────
+onValue(ROOT, (snapshot) => {
+  const data = snapshot.val();
+  if (data) {
+    persons = data.persons || [];
+    checks  = data.checks  || {};
+  } else {
+    persons = [];
+    checks  = {};
+  }
+  render();
+  updateSync();
+  document.getElementById('loading').style.display = 'none';
+});
+
+function updateSync() {
+  const now = new Date();
+  const hh = String(now.getHours()).padStart(2,'0');
+  const mm = String(now.getMinutes()).padStart(2,'0');
+  const ss = String(now.getSeconds()).padStart(2,'0');
+  document.getElementById('sync-time').textContent = `${hh}:${mm}:${ss} 동기화됨`;
+}
+
+// ── 참석자 등록 ────────────────────────────────────────────────
+window.addPerson = function() {
+  const inp  = document.getElementById('inp-name');
+  const err  = document.getElementById('err-msg');
+  const name = inp.value.trim();
+  err.textContent = '';
+  if (!name) { err.textContent = '이름을 입력해 주세요.'; return; }
+  if (persons.includes(name)) { err.textContent = '이미 등록된 이름입니다.'; return; }
+  if (persons.length >= TOTAL) { err.textContent = `최대 ${TOTAL}명까지 등록할 수 있습니다.`; return; }
+  persons.push(name);
+  inp.value = '';
+  saveToFirebase();
+};
+
+window.removePerson = function(name) {
+  persons = persons.filter(p => p !== name);
+  Object.keys(checks).forEach(k => { if (k.endsWith('__' + name)) delete checks[k]; });
+  saveToFirebase();
+};
+
+window.toggle = function(dayKey, person) {
+  const k = `${dayKey}__${person}`;
+  checks[k] = !checks[k];
+  saveToFirebase();
+};
+
+// ── 렌더 ───────────────────────────────────────────────────────
+function render() {
+  const n = persons.length;
+  document.getElementById('reg-count').textContent = n;
+  document.getElementById('prog-bar').style.width = Math.round(n / TOTAL * 100) + '%';
+  document.getElementById('prog-pill').textContent = `${n} / ${TOTAL}명`;
+  renderTags();
+  renderGrid();
+  renderSummary();
+}
+
+function renderTags() {
+  document.getElementById('reg-tags').innerHTML = persons.map(p =>
+    `<span class="tag">${p}
+      <button onclick="removePerson('${p}')" aria-label="${p} 삭제">✕</button>
+    </span>`
+  ).join('');
+}
+
+function renderGrid() {
+  const grid   = document.getElementById('day-grid');
+  const counts = DAYS.map(d => persons.filter(p => checks[`${d.key}__${p}`]).length);
+  const max    = Math.max(...counts, 0);
+  grid.innerHTML = '';
+
+  DAYS.forEach((day, i) => {
+    const att    = persons.filter(p => checks[`${day.key}__${p}`]);
+    const isBest = max > 0 && counts[i] === max;
+
+    const card = document.createElement('div');
+    card.className = 'day-card' + (isBest ? ' best' : '');
+
+    let html = `
+      <div class="day-head">
+        <div class="day-head-top">
+          <div>
+            <div class="day-date">${day.label}</div>
+            <div class="day-dow">${day.dow}</div>
+          </div>
+          ${isBest ? '<span class="best-tag">★ 최다</span>' : ''}
+        </div>
+        <div class="time-pill">🕖 저녁 19:00</div>
+      </div>
+      <div class="day-body">
+        <div class="count-row">
+          <span class="count-n">${att.length}</span>
+          <span class="count-of">&nbsp;/ ${n}명 참석 가능</span>
+        </div>
+        <div class="divider"></div>
+        <div id="chk-${day.key}"></div>
+        ${att.length > 0 ? `<div class="chips">${att.map(a=>`<span class="chip">✓ ${a}</span>`).join('')}</div>` : ''}
+      </div>`;
+
+    card.innerHTML = html;
+    grid.appendChild(card);
+
+    const chkEl = card.querySelector(`#chk-${day.key}`);
+    if (persons.length === 0) {
+      chkEl.innerHTML = '<div class="no-person">참석자를 먼저 등록해 주세요</div>';
+    } else {
+      persons.forEach(p => {
+        const k   = `${day.key}__${p}`;
+        const on  = !!checks[k];
+        const id  = `cb_${k}`;
+        const div = document.createElement('div');
+        div.className = 'check-item' + (on ? ' on' : '');
+        div.innerHTML = `
+          <input type="checkbox" id="${id}" ${on ? 'checked' : ''}
+                 data-day="${day.key}" data-person="${p}">
+          <label for="${id}">${p}</label>`;
+        div.querySelector('input').addEventListener('change', () => toggle(day.key, p));
+        chkEl.appendChild(div);
+      });
+    }
+  });
+}
+
+function renderSummary() {
+  const el   = document.getElementById('summary');
+  const body = document.getElementById('sum-body');
+  if (persons.length === 0) { el.style.display = 'none'; return; }
+  el.style.display = 'block';
+
+  const rows = DAYS.map(d => ({
+    label: `${d.label} (${d.dow})`,
+    names: persons.filter(p => checks[`${d.key}__${p}`])
+  })).sort((a,b) => b.names.length - a.names.length);
+
+  const max = rows[0]?.names.length || 0;
+  let topDone = false;
+
+  body.innerHTML = rows.map(r => {
+    const isBest = !topDone && r.names.length === max && max > 0;
+    if (isBest) topDone = true;
+    return `<div class="sum-row">
+      <span class="sum-lbl">${r.label}</span>
+      <div class="sum-right">
+        ${isBest ? '<span class="sum-best">최다</span>' : ''}
+        <span class="${r.names.length > 0 ? 'sum-val' : 'sum-none'}">
+          ${r.names.length > 0 ? r.names.join(', ') + ` (${r.names.length}명)` : '—'}
+        </span>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ── Enter 키 등록 ─────────────────────────────────────────────
+document.getElementById('inp-name').addEventListener('keydown', e => {
+  if (e.key === 'Enter') window.addPerson();
+  document.getElementById('err-msg').textContent = '';
+});
+</script>
+</body>
+</html>
