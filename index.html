@@ -319,14 +319,11 @@
   </div>
 </main>
 
-<!-- Firebase SDK -->
-<script type="module">
-import { initializeApp }           from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getDatabase, ref, onValue, set, get }
-  from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
-
-// ── Firebase 설정 ──────────────────────────────────────────────
-const app = initializeApp({
+<!-- Firebase SDK (compat) -->
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+<script>
+const app = firebase.initializeApp({
   apiKey:            "AIzaSyBGrSZjUiuOJL6dQH__PdD8_sYBkrYA-gA",
   authDomain:        "cnhu-schedule-poll.firebaseapp.com",
   databaseURL:       "https://cnhu-schedule-poll-default-rtdb.asia-southeast1.firebasedatabase.app",
@@ -335,8 +332,8 @@ const app = initializeApp({
   messagingSenderId: "242734240479",
   appId:             "1:242734240479:web:d5aa3c0b6e13e737f84f6a",
 });
-const db = getDatabase(app);
-const ROOT = ref(db, "schedule_poll");
+const db   = firebase.database();
+const ROOT = db.ref("schedule_poll");
 
 // ── 상수 ───────────────────────────────────────────────────────
 const DAYS = [
@@ -354,14 +351,14 @@ async function saveToFirebase() {
   if (saving) return;
   saving = true;
   try {
-    await set(ROOT, { persons, checks });
+    await ROOT.set({ persons, checks });
     updateSync();
   } catch(e) { console.error(e); }
   saving = false;
 }
 
 // ── 실시간 리스너 ──────────────────────────────────────────────
-onValue(ROOT, (snapshot) => {
+ROOT.on("value", (snapshot) => {
   const data = snapshot.val();
   if (data) {
     persons = data.persons || [];
