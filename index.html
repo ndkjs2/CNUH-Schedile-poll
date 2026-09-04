@@ -275,7 +275,7 @@
 <header>
   <div class="eyebrow">CNHU · 행사 일정 조율</div>
   <h1>📅 참석 가능 날짜를 선택해 주세요</h1>
-  <p class="sub">저녁 19:00 공통 · 9월 28일 / 29일</p>
+  <p class="sub">저녁 19:00 공통 · 10월 6일</p>
   <div class="progress-wrap">
     <span class="prog-text">등록 완료</span>
     <span class="prog-num"><span id="reg-count">0</span> / 11명</span>
@@ -337,8 +337,7 @@ const ROOT = db.ref("schedule_poll");
 
 // ── 상수 ───────────────────────────────────────────────────────
 const DAYS = [
-  { label:"9월 28일", dow:"월요일", key:"d928" },
-  { label:"9월 29일", dow:"화요일", key:"d929" },
+  { label:"10월 6일", dow:"화요일", key:"d1006" },
 ];
 const TOTAL = 11;
 
@@ -496,11 +495,9 @@ function renderSummary() {
   })).sort((a,b) => b.names.length - a.names.length);
 
   const max = rows[0]?.names.length || 0;
-  let topDone = false;
 
   body.innerHTML = rows.map(r => {
-    const isBest = !topDone && r.names.length === max && max > 0;
-    if (isBest) topDone = true;
+    const isBest = r.names.length === max && max > 0;
     return `<div class="sum-row">
       <span class="sum-lbl">${r.label}</span>
       <div class="sum-right">
